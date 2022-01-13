@@ -3,6 +3,8 @@ package dev.hotel.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import dev.hotel.entite.Client;
@@ -18,20 +20,30 @@ public class ClientController {
 	}
 	
 	@GetMapping("/clients")
-	List<Client> list() {
+	List<Client> list(@RequestParam Integer start,
+						@RequestParam Integer size) {
 		return clientRepository.findAll();
 	}
 	
-	@GetMapping("/clients/{id}")
-	Client one(@PathVariable Integer id) {
-		Optional<Client> optionalEntity =  clientRepository.findById(id);
-		Client client = optionalEntity.get();
-		return client;
+	@GetMapping("/clients/{numero}")
+	public ResponseEntity<?> one(@PathVariable String numero) {
+		if(clientRepository.getClient(numero) != null) {
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(clientRepository.getClient(numero));
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND); 
+		}
 	}
 	
 	@PostMapping("/clients")
-	Client addClient(@RequestBody Client client) {
-		return clientRepository.save(client);
+	public ResponseEntity<?> addClient(@RequestBody Client client) {
+		if(client.getNom().length() < 2 || client.getPrenoms().length() < 2) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body("Veuillez entrer un nom et prénom avec au minimum 2 caractères"); 
+		} else {
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(this.clientRepository.save(client));
+		}
 	}
 	
 }
